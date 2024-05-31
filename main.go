@@ -10,6 +10,7 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/employee", controllers.EmployeeController)
+	mux.HandleFunc("/punch", controllers.TimeEntriesController)
 
 	log.Println("Listening on port :8080...")
 	http.ListenAndServe(":8080", mux)
