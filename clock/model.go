@@ -2,10 +2,10 @@ package clock
 
 import "time"
 
-type Clock int
+type TypeRecord int
 
 const (
-	In Clock = iota + 1
+	In TypeRecord = iota + 1
 	Out
 )
 
@@ -14,14 +14,15 @@ type Model struct {
 	Type       string `json:"type_entry"` // In or Out
 }
 
-type ClockPunch struct {
-	EmployeeId   int64     `json:"employee_id"`
-	EmployeeName string    `json:"employee_name"`
-	TimeEntry    time.Time `json:"date_hour"`
-	Type         Clock     `json:"type"` // In or Out
+type Record struct {
+	EmployeeId   int64      `json:"employee_id"`
+	EmployeeName string     `json:"employee_name"`
+	DateHour     time.Time  `json:"date_hour"`
+	Type         TypeRecord `json:"type"` // In or Out
 }
 
-type Punches struct {
-	Clocks           []ClockPunch
-	TotalHoursWorked string
+type Records struct {
+	Message          string   `json:"message,omitempty"`
+	Clocks           []Record `json:"records"`
+	TotalHoursWorked string   `json:"hours_worked"`
 }

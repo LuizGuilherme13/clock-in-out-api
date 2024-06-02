@@ -4,7 +4,7 @@ import (
 	"database/sql"
 )
 
-func Punch(conn *sql.DB, employeeId int64, dateHour string, clockType Clock) error {
+func RecordTime(conn *sql.DB, employeeId int64, dateHour string, clockType TypeRecord) error {
 	tx, err := conn.Begin()
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func Punch(conn *sql.DB, employeeId int64, dateHour string, clockType Clock) err
 	return nil
 }
 
-func ArrivingOrLeaving(conn *sql.DB, employeeID int64, date string) (Clock, error) {
+func ArrivingOrLeaving(conn *sql.DB, employeeID int64, date string) (TypeRecord, error) {
 	query := "SELECT type FROM clock_records "
 	query += "WHERE"
 	query += "  employee_id = $1"
@@ -40,14 +40,14 @@ func ArrivingOrLeaving(conn *sql.DB, employeeID int64, date string) (Clock, erro
 		return 0, err
 	}
 
-	if lastClock == 0 || Clock(lastClock) == Out {
+	if lastClock == 0 || TypeRecord(lastClock) == Out {
 		return In, nil
 	}
 
 	return Out, nil
 }
 
-func GetAllPunchClocks(conn *sql.DB, employeeId int64) (*Punches, error) {
+func GetAllRecords(conn *sql.DB, employeeId int64) (*Records, error) {
 	query := "SELECT ee.id, ee.username, cr.date_hour, cr.type "
 	query += "FROM clock_records cr "
 	query += "INNER JOIN employees ee"
@@ -60,16 +60,16 @@ func GetAllPunchClocks(conn *sql.DB, employeeId int64) (*Punches, error) {
 	}
 	defer rows.Close()
 
-	p := Punches{}
-	cp := ClockPunch{}
+	p := Records{}
+	cp := Record{}
 	t := int(0)
 
 	for rows.Next() {
-		err = rows.Scan(&cp.EmployeeId, &cp.EmployeeName, &cp.TimeEntry, &t)
+		err = rows.Scan(&cp.EmployeeId, &cp.EmployeeName, &cp.DateHour, &t)
 		if err != nil {
 			return nil, err
 		}
-		cp.Type = Clock(t)
+		cp.Type = TypeRecord(t)
 
 		p.Clocks = append(p.Clocks, cp)
 	}

@@ -7,7 +7,11 @@ import (
 	"github.com/LuizGuilherme13/clock-in-api/database"
 )
 
-func Controller(w http.ResponseWriter, r *http.Request) {
+func Controller(mux *http.ServeMux) {
+	mux.HandleFunc("POST /employee", createEmployee)
+}
+
+func createEmployee(w http.ResponseWriter, r *http.Request) {
 	ee := &Model{}
 
 	err := json.NewDecoder(r.Body).Decode(ee)

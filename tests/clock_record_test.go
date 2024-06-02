@@ -13,7 +13,12 @@ import (
 )
 
 func TestClockRecord(t *testing.T) {
-	t.Run("post punch", func(t *testing.T) {
+	mux := http.NewServeMux()
+	clock.Controller(mux)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	t.Run("post clock", func(t *testing.T) {
 
 		employee := employee.Model{
 			UserName: "luiz",
@@ -25,33 +30,31 @@ func TestClockRecord(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		req := httptest.NewRequest(http.MethodPost, "/punch", bytes.NewBuffer(body))
-		rr := httptest.NewRecorder()
-
-		handle := http.HandlerFunc(clock.Controller)
-		handle.ServeHTTP(rr, req)
-
-		if rr.Code != http.StatusOK {
-			t.Fatalf("rr.Code = %d, expected = %d", rr.Code, http.StatusOK)
-		}
-	})
-
-	t.Run("get punches", func(t *testing.T) {
-		eeId := 5
-
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/punch?id=%d", eeId), nil)
-		rr := httptest.NewRecorder()
-
-		handle := http.HandlerFunc(clock.Controller)
-		handle.ServeHTTP(rr, req)
-
-		clocks := clock.Punches{}
-		if err := json.NewDecoder(rr.Body).Decode(&clocks); err != nil {
+		resp, err := http.Post(server.URL+"/clock", "application/json", bytes.NewBuffer(body))
+		if err != nil {
 			t.Fatal(err)
 		}
 
-		if rr.Code != http.StatusOK {
-			t.Fatalf("rr.Code = %d, expected = %d", rr.Code, http.StatusOK)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("rr.Code = %d, expected = %d", resp.StatusCode, http.StatusOK)
+		}
+	})
+
+	t.Run("get clock", func(t *testing.T) {
+		eeId := 5
+
+		resp, err := http.Get(fmt.Sprintf("%s/clock/%d", server.URL, eeId))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		clocks := clock.Records{}
+		if err := json.NewDecoder(resp.Body).Decode(&clocks); err != nil {
+			t.Fatal(err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("rr.Code = %d, expected = %d", resp.StatusCode, http.StatusOK)
 		}
 	})
 }

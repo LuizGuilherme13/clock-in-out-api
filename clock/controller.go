@@ -11,19 +11,12 @@ import (
 	"github.com/LuizGuilherme13/clock-in-api/employee"
 )
 
-func Controller(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		punch(w, r)
-	case http.MethodGet:
-		getClocks(w, r)
-	default:
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
+func Controller(mux *http.ServeMux) {
+	mux.HandleFunc("POST /clock", recordTime)
+	mux.HandleFunc("GET /clock/{id}", getRecords)
 }
 
-func punch(w http.ResponseWriter, r *http.Request) {
+func recordTime(w http.ResponseWriter, r *http.Request) {
 	ee := &employee.Model{}
 
 	err := json.NewDecoder(r.Body).Decode(ee)
@@ -53,18 +46,35 @@ func punch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = Punch(conn, foundEE.Id, now.Format(time.DateTime), clockType)
+	err = RecordTime(conn, foundEE.Id, now.Format(time.DateTime), clockType)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	clocks, err := GetAllRecords(conn, foundEE.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	clocks.Message = fmt.Sprintf("Welcome, %s!", foundEE.UserName)
+	if clockType == Out {
+		clocks.Message = fmt.Sprintf("See you later, %s!", foundEE.UserName)
+	}
+
+	clocks.TotalHoursWorked = calcHoursWorked(clocks)
+
+	err = json.NewEncoder(w).Encode(clocks)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
-func getClocks(w http.ResponseWriter, r *http.Request) {
+func getRecords(w http.ResponseWriter, r *http.Request) {
 
-	eeId, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	eeId, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -77,13 +87,23 @@ func getClocks(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	punches, err := GetAllPunchClocks(conn, eeId)
+	punches, err := GetAllRecords(conn, eeId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// var intervals  []time.Duration
+	punches.TotalHoursWorked = calcHoursWorked(punches)
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(punches); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func calcHoursWorked(punches *Records) string {
 	var totalWorked time.Duration
 	for i := 0; i < len(punches.Clocks); i++ {
 		if punches.Clocks[i].Type != Out {
@@ -92,17 +112,11 @@ func getClocks(w http.ResponseWriter, r *http.Request) {
 
 		in := punches.Clocks[i-1]
 		out := punches.Clocks[i]
-		totalWorked += out.TimeEntry.Sub(in.TimeEntry)
+		totalWorked += out.DateHour.Sub(in.DateHour)
 	}
 
 	hours := int(totalWorked.Hours())
 	minutes := int(totalWorked.Minutes()) % 60
-	punches.TotalHoursWorked = fmt.Sprintf("%d:%02d", hours, minutes)
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(punches); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+	return fmt.Sprintf("%d:%02d", hours, minutes)
 }

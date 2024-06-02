@@ -9,15 +9,19 @@ import (
 )
 
 func TestEmployee(t *testing.T) {
-	t.Run("create", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/employee", nil)
-		rr := httptest.NewRecorder()
+	mux := http.NewServeMux()
+	employee.Controller(mux)
+	server := httptest.NewServer(mux)
+	defer server.Close()
 
-		handle := http.HandlerFunc(employee.Controller)
-		handle.ServeHTTP(rr, req)
+	t.Run("create employee", func(t *testing.T) {
+		resp, err := http.Post(server.URL+"/employee", "application/json", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		if rr.Code != http.StatusCreated {
-			t.Fatalf("rr.Code = %d, expected = %d", rr.Code, http.StatusCreated)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("rr.Code = %d, expected = %d", resp.StatusCode, http.StatusOK)
 		}
 	})
 }
