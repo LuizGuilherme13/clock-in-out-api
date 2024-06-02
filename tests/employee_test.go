@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/LuizGuilherme13/clock-in-api/controllers"
+	"github.com/LuizGuilherme13/clock-in-api/employee"
 )
 
 func TestEmployee(t *testing.T) {
@@ -13,7 +13,7 @@ func TestEmployee(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/employee", nil)
 		rr := httptest.NewRecorder()
 
-		handle := http.HandlerFunc(controllers.EmployeeController)
+		handle := http.HandlerFunc(employee.Controller)
 		handle.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusCreated {
