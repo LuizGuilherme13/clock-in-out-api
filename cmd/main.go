@@ -5,6 +5,9 @@ import (
 	"net/http"
 )
 
+//	@title			Clock-In/Out API
+//	@version		1.0
+//	@description	API to record employees' clock-in and clock-out times.
 func main() {
 	mux := http.NewServeMux()
 	MountRoutes(mux)

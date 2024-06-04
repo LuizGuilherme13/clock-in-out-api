@@ -11,6 +11,16 @@ func Controller(mux *http.ServeMux) {
 	mux.HandleFunc("POST /employee", createEmployee)
 }
 
+//	@Summary	create a new employee
+//	@ID			create-employee
+//	@Tags		employee
+//	@Accept		json
+//	@Produce	json
+//	@Param		employee	body		Model	true	"Payload"
+//	@Success	201			{object}	Model
+//	@Failure	400			{string}	string	"Bad Request"
+//	@Failure	500			{string}	string	"Internal Server Error"
+//	@Router		/employee [post]
 func createEmployee(w http.ResponseWriter, r *http.Request) {
 	ee := &Model{}
 

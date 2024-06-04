@@ -16,6 +16,16 @@ func Controller(mux *http.ServeMux) {
 	mux.HandleFunc("GET /clock/{id}", getRecords)
 }
 
+//	@Summary	Register a clock-in/clock-out time for a employee
+//	@ID			register-clock
+//	@Tags		clock
+//	@Accept		json
+//	@Produce	json
+//	@Param		employee	body		employee.Model	true	"Payload"
+//	@Success	201			{object}	Records
+//	@Failure	400			{string}	string	"Bad Request"
+//	@Failure	500			{string}	string	"Internal Server Error"
+//	@Router		/clock [post]
 func recordTime(w http.ResponseWriter, r *http.Request) {
 	ee := &employee.Model{}
 
