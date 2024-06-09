@@ -1,4 +1,4 @@
-package main
+package routes
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-func MountRoutes(mux *http.ServeMux) {
+func Mount(mux *http.ServeMux) {
 	mux.HandleFunc("/swagger/*", httpSwagger.WrapHandler)
 
 	employee.Controller(mux)

@@ -5,6 +5,9 @@ services:
       - 8080:8080
     depends_on:
       - postgres
+    volumes:
+      - .:/app
+    command: ./main
 
   postgres:
     image: postgres
@@ -16,4 +19,4 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - ./database/postgres_data:/var/lib/postgresql/data
